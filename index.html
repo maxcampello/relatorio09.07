@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise Google Ads - Últimos 15 Dias</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .account-info {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .account-info p {
+            color: #555;
+            margin: 5px 0;
+        }
+
+        .account-info strong {
+            color: #333;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .kpi-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .kpi-card:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .kpi-card.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .kpi-subtitle {
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-container {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-container h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: 600;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .metrics-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .metrics-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metrics-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            color: #555;
+        }
+
+        .metrics-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .metrics-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .insights {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 20px 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .insights h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .insight-item {
+            margin: 12px 0;
+            color: #555;
+            line-height: 1.6;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .insight-item:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #e0e7ff;
+            color: #667eea;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .metrics-table {
+                font-size: 12px;
+            }
+
+            .metrics-table th,
+            .metrics-table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Análise Google Ads</h1>
+            <p>Conta: 638-458-5395 | Período: Últimos 15 Dias (24/06/2026 - 01/07/2026)</p>
+        </div>
+
+        <div class="content">
+            <div class="account-info">
+                <p><strong>Conta:</strong> Feno Fibra (638-458-5395)</p>
+                <p><strong>Campanha:</strong> [V4][SEARCH][LP] - 30/04/2026</p>
+                <p><strong>Período de Análise:</strong> 24/06/2026 a 01/07/2026 (8 dias com dados)</p>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card primary">
+                    <div class="kpi-label">Spend Total</div>
+                    <div class="kpi-value">R$ 202,96</div>
+                    <div class="kpi-subtitle">Investimento em publicidade</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Impressões</div>
+                    <div class="kpi-value">2.739</div>
+                    <div class="kpi-subtitle">Quantas vezes o anúncio foi exibido</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Cliques</div>
+                    <div class="kpi-value">54</div>
+                    <div class="kpi-subtitle">Taxa de clique: 1,97%</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Conversões</div>
+                    <div class="kpi-value">11</div>
+                    <div class="kpi-subtitle">Taxa de conversão: 20,37%</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">CPC Médio</div>
+                    <div class="kpi-value">R$ 3,76</div>
+                    <div class="kpi-subtitle">Custo por clique</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">CPA</div>
+                    <div class="kpi-value">R$ 18,45</div>
+                    <div class="kpi-subtitle">Custo por aquisição/conversão</div>
+                </div>
+            </div>
+
+            <div class="insights">
+                <h3>💡 Principais Insights</h3>
+                <div class="insight-item"><strong>Performance Positiva:</strong> Taxa de conversão de 20,37% indica que o anúncio está atraindo um público qualificado com boa intenção de compra.</div>
+                <div class="insight-item"><strong>Melhor Dia:</strong> 25/06 com a maior taxa de conversão (66,67%), apesar de apenas 3 cliques. Investigar padrões de horários/públicos neste dia.</div>
+                <div class="insight-item"><strong>Custo Controlado:</strong> CPA de R$ 18,45 com investimento total de R$ 202,96 está dentro de padrões viáveis para marketing digital.</div>
+                <div class="insight-item"><strong>Volume Crescente:</strong> Impressões crescendo de 82 (01/07) para 718 (28/06), sugerindo melhor posicionamento e maior exposição.</div>
+                <div class="insight-item"><strong>Oportunidade:</strong> 30/06 teve 0 conversões apesar de 6 cliques. Verificar possíveis problemas na landing page neste período.</div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-container">
+                    <h3>Evolução de Cliques e Impressões</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chartClicksImpressions"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Evolução de Conversões</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chartConversions"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Investimento Diário (R$)</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chartSpend"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>CPC e CTR Diário</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chartMetrics"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3>📋 Detalhamento Completo por Dia</h3>
+                <table class="metrics-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Impressões</th>
+                            <th>Cliques</th>
+                            <th>CTR</th>
+                            <th>Spend (R$)</th>
+                            <th>CPC (R$)</th>
+                            <th>Conversões</th>
+                            <th>Taxa Conv.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>24/06/2026</strong></td>
+                            <td>320</td>
+                            <td>8</td>
+                            <td>2,50%</td>
+                            <td>R$ 31,51</td>
+                            <td>R$ 3,94</td>
+                            <td>1</td>
+                            <td>12,50%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>25/06/2026</strong></td>
+                            <td>273</td>
+                            <td>3</td>
+                            <td>1,10%</td>
+                            <td>R$ 8,06</td>
+                            <td>R$ 2,69</td>
+                            <td>2</td>
+                            <td>66,67%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>26/06/2026</strong></td>
+                            <td>345</td>
+                            <td>8</td>
+                            <td>2,32%</td>
+                            <td>R$ 26,50</td>
+                            <td>R$ 3,31</td>
+                            <td>4</td>
+                            <td>50,00%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>27/06/2026</strong></td>
+                            <td>565</td>
+                            <td>8</td>
+                            <td>1,42%</td>
+                            <td>R$ 31,15</td>
+                            <td>R$ 3,89</td>
+                            <td>1</td>
+                            <td>12,50%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>28/06/2026</strong></td>
+                            <td>718</td>
+                            <td>9</td>
+                            <td>1,25%</td>
+                            <td>R$ 34,17</td>
+                            <td>R$ 3,80</td>
+                            <td>1</td>
+                            <td>11,11%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>29/06/2026</strong></td>
+                            <td>239</td>
+                            <td>10</td>
+                            <td>4,18%</td>
+                            <td>R$ 38,37</td>
+                            <td>R$ 3,84</td>
+                            <td>2</td>
+                            <td>20,00%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>30/06/2026</strong></td>
+                            <td>197</td>
+                            <td>6</td>
+                            <td>3,05%</td>
+                            <td>R$ 21,80</td>
+                            <td>R$ 3,63</td>
+                            <td>0</td>
+                            <td>0,00%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>01/07/2026</strong></td>
+                            <td>82</td>
+                            <td>2</td>
+                            <td>2,44%</td>
+                            <td>R$ 11,00</td>
+                            <td>R$ 5,50</td>
+                            <td>0</td>
+                            <td>0,00%</td>
+                        </tr>
+                        <tr style="background: #f0f4ff; font-weight: 600;">
+                            <td><strong>TOTAL</strong></td>
+                            <td><strong>2.739</strong></td>
+                            <td><strong>54</strong></td>
+                            <td><strong>1,97%</strong></td>
+                            <td><strong>R$ 202,96</strong></td>
+                            <td><strong>R$ 3,76</strong></td>
+                            <td><strong>11</strong></td>
+                            <td><strong>20,37%</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="insights">
+                <h3>🎯 Recomendações</h3>
+                <div class="insight-item"><strong>Aumentar Investimento nos Dias Rentáveis:</strong> Dias 25 e 26 apresentaram as melhores taxas de conversão (66,67% e 50%). Considere aumentar o orçamento nestes períodos.</div>
+                <div class="insight-item"><strong>Investigar Queda de Performance:</strong> 30/06 e 01/07 tiveram 0 conversões. Verificar se houve mudanças na landing page, segmentação ou qualidade dos cliques.</div>
+                <div class="insight-item"><strong>Otimizar CTR Baixo:</strong> CTR de 1,97% é aceitável, mas pode ser melhorado com testes A/B nos títulos e descrições dos anúncios.</div>
+                <div class="insight-item"><strong>Monitorar CPA:</strong> CPA de R$ 18,45 está controlado, mas acompanhe diariamente para identificar tendências de aumento.</div>
+                <div class="insight-item"><strong>Análise de Horários:</strong> Realizar análise por horários da campanha para identificar os picos de conversão e ajustar lances.</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>📅 Relatório gerado em 09/07/2026 | Dados obtidos via Windsor.ai | Conta Google Ads: 638-458-5395 (Feno Fibra)</p>
+        </div>
+    </div>
+
+    <script>
+        // Dados
+        const dates = ['24/06', '25/06', '26/06', '27/06', '28/06', '29/06', '30/06', '01/07'];
+        const clicks = [8, 3, 8, 8, 9, 10, 6, 2];
+        const impressions = [320, 273, 345, 565, 718, 239, 197, 82];
+        const spend = [31.51, 8.06, 26.50, 31.15, 34.17, 38.37, 21.80, 11.00];
+        const conversions = [1, 2, 4, 1, 1, 2, 0, 0];
+        const cpc = [3.94, 2.69, 3.31, 3.89, 3.80, 3.84, 3.63, 5.50];
+        const ctr = [2.50, 1.10, 2.32, 1.42, 1.25, 4.18, 3.05, 2.44];
+
+        // Configuração dos gráficos
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15,
+                        font: {
+                            size: 12,
+                            weight: '600'
+                        }
+                    }
+                },
+                filler: {
+                    propagate: true
+                }
+            },
+            scales: {
+                y: {
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            }
+        };
+
+        // Gráfico 1: Cliques e Impressões
+        new Chart(document.getElementById('chartClicksImpressions'), {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Cliques',
+                        data: clicks,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Impressões',
+                        data: impressions,
+                        borderColor: '#764ba2',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#764ba2',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    ...chartOptions.scales,
+                    y: {
+                        ...chartOptions.scales.y,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Cliques',
+                            font: { size: 12, weight: '600' }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Impressões',
+                            font: { size: 12, weight: '600' }
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico 2: Conversões
+        new Chart(document.getElementById('chartConversions'), {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Conversões',
+                    data: conversions,
+                    backgroundColor: [
+                        'rgba(102, 126, 234, 0.8)',
+                        'rgba(102, 126, 234, 0.8)',
+                        'rgba(102, 126, 234, 0.8)',
+                        'rgba(102, 126, 234, 0.8)',
+                        'rgba(102, 126, 234, 0.8)',
+                        'rgba(102, 126, 234, 0.8)',
+                        'rgba(240, 100, 100, 0.8)',
+                        'rgba(240, 100, 100, 0.8)'
+                    ],
+                    borderColor: '#667eea',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    ...chartOptions.scales,
+                    y: {
+                        ...chartOptions.scales.y,
+                        beginAtZero: true,
+                        max: 5
+                    }
+                }
+            }
+        });
+
+        // Gráfico 3: Spend
+        new Chart(document.getElementById('chartSpend'), {
+            type: 'area',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Investimento (R$)',
+                    data: spend,
+                    borderColor: '#764ba2',
+                    backgroundColor: 'rgba(118, 75, 162, 0.2)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#764ba2',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Gráfico 4: CPC e CTR
+        new Chart(document.getElementById('chartMetrics'), {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'CPC (R$)',
+                        data: cpc,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'CTR (%)',
+                        data: ctr,
+                        borderColor: '#f96b6b',
+                        backgroundColor: 'rgba(249, 107, 107, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#f96b6b',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    ...chartOptions.scales,
+                    y: {
+                        ...chartOptions.scales.y,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'CPC (R$)',
+                            font: { size: 12, weight: '600' }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'CTR (%)',
+                            font: { size: 12, weight: '600' }
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
